@@ -34,7 +34,6 @@ public class LuxoftServiceImpl implements LuxoftService {
 	@Async(AsyncConfiguration.ASYNC_EXECUTOR)
 	public CompletableFuture<List<Album>> getAlbuns(String searchKey) throws InterruptedException {
 
-		System.out.println("Começou albuns " + this.albunsUrl);
 		ResponseEntity<ITunesResponse> entity = restTemplate.getForEntity(this.albunsUrl+searchKey, ITunesResponse.class);
 		List<Album> albuns = entity.getBody().getResults();
 		Collections.sort(albuns, new Comparator<Album>() {
@@ -43,18 +42,14 @@ public class LuxoftServiceImpl implements LuxoftService {
 				return o1.getCollectionName().compareTo(o2.getCollectionName());
 			}
 		});
-		
-		Thread.sleep(2 * 60 * 1000);
-		
+
 		return CompletableFuture.completedFuture(albuns);
 	}
 
 	@Override
 	@Async(AsyncConfiguration.ASYNC_EXECUTOR)
 	public CompletableFuture<List<Book>> getBooks(String searchKey) throws InterruptedException {
-		
-		System.out.println("Começou books: " + this.booksUrl);
-		
+
 		ResponseEntity<GoogleResponse> entity = restTemplate.getForEntity(this.booksUrl+searchKey, GoogleResponse.class);
 		List<Book> books = entity.getBody().getItems();
 		Collections.sort(books, new Comparator<Book>() {
@@ -63,8 +58,6 @@ public class LuxoftServiceImpl implements LuxoftService {
 				return o1.getVolumeInfo().getTitle().compareTo(o2.getVolumeInfo().getTitle());
 			}
 		});
-		
-		System.out.println("Completou books: " + books);
 		
 		return CompletableFuture.completedFuture(books);
 	}

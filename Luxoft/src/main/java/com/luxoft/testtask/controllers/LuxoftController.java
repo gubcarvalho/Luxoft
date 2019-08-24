@@ -2,6 +2,7 @@ package com.luxoft.testtask.controllers;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 
 import org.jsondoc.core.annotation.Api;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,7 +36,7 @@ public class LuxoftController {
 	private LuxoftService luxoftService;
 	
 	@ApiMethod(description = "Retrives albums and/or books by the artist/author name")
-	@Retryable(value= {InterruptedException.class, ExecutionException.class}, maxAttempts = 5)
+	@Retryable(include= {CompletionException.class ,InterruptedException.class, ExecutionException.class}, maxAttempts = 5, backoff = @Backoff(1000))
 	@GetMapping(value = "/artists/{searchKey}")
 	public @ApiResponseObject HttpEntity<ResponseWrapper> getAllArtists(
 			@ApiPathParam(description = "search parameter to find albuns and/or books") @PathVariable("searchKey") String searchKey) throws InterruptedException, ExecutionException {
@@ -54,7 +56,8 @@ public class LuxoftController {
 	}
 	
 	@Recover
-	public String recover(Throwable t) {
-		return "Sorry. We are having some problems";
+	public HttpEntity<String> recover(Throwable t) {
+		return new ResponseEntity<>("Sorry. We are having some problems", HttpStatus.BAD_REQUEST);
 	}
+
 }
